@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>STARGATE · RANSOM</title>
+<style>
+:root{--sg-blue:#00BFFF;--sg-cyan:#66D9FF;--red:#FF2222;--gold:#FFD700;
+--green:#33FF66;--mono:'Courier New',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#000;color:var(--sg-blue);
+font-family:var(--mono);overflow:hidden;user-select:none;}
+
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,.7),transparent),
+    radial-gradient(1px 1px at 60% 70%,rgba(255,255,255,.5),transparent),
+    radial-gradient(2px 2px at 45% 45%,rgba(255,255,255,.8),transparent),
+    radial-gradient(1px 1px at 80% 20%,rgba(255,255,255,.6),transparent);}
+
+.desktop-icons{position:fixed;inset:0;z-index:1;padding:20px;display:grid;
+  grid-template-columns:repeat(auto-fill,80px);grid-auto-rows:90px;gap:20px;
+  pointer-events:none;opacity:.4;}
+.desktop-icon{display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-size:10px;color:var(--sg-blue);position:relative;}
+.desktop-icon .ic{width:48px;height:48px;border-radius:8px;
+  background:linear-gradient(135deg,#001a2a,#003a5a);
+  border:1px solid var(--sg-blue);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  color:var(--sg-blue);position:relative;}
+.desktop-icon .nm{text-align:center;font-size:9px;word-break:break-all;}
+.desktop-icon.locked .ic{background:#1a0000;border-color:var(--red);color:#8a0000;}
+.desktop-icon.locked .ic::after{content:"🔒";position:absolute;top:-6px;right:-6px;font-size:14px;}
+
+.screen{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;
+  align-items:center;justify-content:center;padding:20px;text-align:center;overflow-y:auto;}
+.screen.active{display:flex;}
+
+.stargate-container{position:relative;width:clamp(240px,60vw,340px);
+  height:clamp(240px,60vw,340px);display:flex;align-items:center;
+  justify-content:center;margin-bottom:14px;}
+.gate-ring{position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,transparent 55%,#2a2a2a 56%,
+    #4a4a4a 60%,#2a2a2a 64%,#1a1a1a 68%,transparent 69%);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.9),0 0 30px rgba(0,191,255,.3);}
+.event-horizon{position:absolute;top:50%;left:50%;width:55%;height:55%;
+  transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(102,217,255,.9) 0%,
+    rgba(0,191,255,.7) 30%,rgba(0,100,180,.4) 60%,transparent 100%);
+  box-shadow:0 0 60px rgba(0,191,255,.8),inset 0 0 40px rgba(255,255,255,.3);}
+
+#lockScreen{background:rgba(0,0,0,.6);}
+.lock-title{font-size:clamp(20px,5vw,32px);letter-spacing:6px;font-weight:900;
+  color:var(--red);text-shadow:0 0 30px var(--red);margin-bottom:6px;}
+.lock-sub{font-size:clamp(9px,2vw,12px);letter-spacing:3px;opacity:.8;
+  margin-bottom:12px;color:var(--sg-blue);}
+.lock-timer{font-size:clamp(32px,10vw,60px);font-weight:900;color:var(--red);
+  text-shadow:0 0 40px var(--red);letter-spacing:4px;
+  font-variant-numeric:tabular-nums;margin-bottom:6px;}
+.lock-timer.warning{animation:blink .5s steps(2) infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.4;}}
+.lock-timer-label{font-size:9px;letter-spacing:3px;opacity:.7;
+  margin-bottom:14px;color:var(--sg-blue);}
+.lock-panel{background:rgba(0,191,255,.08);border:2px solid var(--sg-blue);
+  border-radius:12px;padding:14px 18px;max-width:420px;width:100%;
+  box-shadow:0 0 40px rgba(0,191,255,.4);margin-bottom:12px;}
+.lock-panel h2{font-size:clamp(14px,3.5vw,18px);letter-spacing:2px;
+  color:#fff;margin-bottom:8px;}
+.lock-panel p{font-size:clamp(10px,2.2vw,12px);line-height:1.6;
+  color:var(--sg-blue);opacity:.9;margin-bottom:8px;}
+.price{font-size:clamp(24px,6vw,40px);font-weight:900;color:var(--gold);
+  text-shadow:0 0 20px var(--gold);letter-spacing:4px;margin:6px 0;}
+
+.lock-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;}
+.btn{cursor:pointer;border:none;font-family:inherit;font-weight:900;letter-spacing:2px;
+  padding:14px 20px;border-radius:22px;font-size:13px;
+  text-transform:uppercase;transition:all .2s;}
+.btn-pay{background:var(--sg-blue);color:#000;box-shadow:0 0 30px rgba(0,191,255,.6);}
+.btn-refuse{background:transparent;color:var(--red);border:2px solid var(--red);}
+.lock-footer{font-size:8px;letter-spacing:1px;opacity:.5;margin-top:10px;color:var(--sg-blue);}
+
+#payScreen,#extraScreen{background:rgba(0,10,20,.9);}
+.pay-title{font-size:clamp(16px,4vw,24px);letter-spacing:3px;
+  color:var(--sg-cyan);margin-bottom:6px;}
+.pay-sub{font-size:11px;letter-spacing:2px;color:var(--sg-blue);margin-bottom:16px;}
+.badge{display:inline-block;background:rgba(255,215,0,.1);border:1px solid var(--gold);
+  color:var(--gold);padding:2px 8px;border-radius:10px;font-size:10px;margin-bottom:4px;}
+.amount-input{display:flex;align-items:center;gap:8px;background:rgba(0,191,255,.1);
+  border:2px solid var(--sg-blue);border-radius:12px;padding:12px 16px;
+  max-width:300px;width:100%;margin-bottom:6px;}
+.amount-input .cur{font-size:18px;color:var(--gold);font-weight:bold;}
+.amount-input input{flex:1;background:transparent;border:none;outline:none;
+  color:var(--gold);font-family:inherit;font-size:20px;font-weight:bold;
+  text-align:right;min-width:0;}
+.amount-hint{font-size:9px;letter-spacing:1px;color:var(--sg-blue);
+  opacity:.6;margin-bottom:14px;min-height:12px;}
+.pay-actions{display:flex;gap:8px;max-width:360px;width:100%;
+  flex-wrap:wrap;justify-content:center;}
+.pay-actions .btn{flex:1;min-width:130px;}
+.btn-confirm{background:var(--sg-blue);color:#000;}
+.btn-cancel{background:transparent;color:var(--sg-blue);border:2px solid var(--sg-blue);}
+
+#txScreen{background:rgba(0,0,0,.9);}
+.tx-title{font-size:16px;letter-spacing:3px;color:var(--sg-cyan);margin-bottom:6px;}
+.tx-amount{font-size:32px;font-weight:900;color:var(--gold);
+  text-shadow:0 0 20px var(--gold);margin-bottom:16px;}
+.tx-progress-wrap{width:min(380px,92%);margin-bottom:6px;}
+.tx-label{display:flex;justify-content:space-between;font-size:10px;
+  letter-spacing:2px;margin-bottom:4px;color:var(--sg-blue);}
+.tx-progress{height:12px;background:rgba(0,191,255,.15);
+  border:1px solid var(--sg-blue);border-radius:6px;overflow:hidden;}
+.tx-fill{height:100%;width:0%;background:linear-gradient(90deg,#003a5a,var(--sg-blue),var(--sg-cyan));}
+.tx-log{width:min(380px,92%);height:110px;overflow-y:auto;
+  background:rgba(0,191,255,.05);border:1px solid var(--sg-blue);
+  border-radius:8px;padding:8px 10px;font-size:10px;line-height:1.6;text-align:left;}
+.tx-log div{color:var(--sg-blue);}
+.tx-log div.ok{color:var(--green);}
+
+#successScreen{background:rgba(0,15,25,.9);}
+.success-icon{font-size:64px;color:var(--green);margin-bottom:8px;}
+.success-title{font-size:clamp(18px,5vw,28px);letter-spacing:3px;font-weight:900;
+  color:var(--green);margin-bottom:8px;}
+.success-sub{font-size:11px;color:var(--green);opacity:.8;
+  line-height:1.7;margin-bottom:14px;}
+.success-paid{font-size:16px;color:var(--gold);margin-bottom:14px;}
+.btn-green{background:var(--green);color:#000;padding:12px 24px;border:none;
+  border-radius:10px;font-family:inherit;font-weight:900;font-size:12px;
+  letter-spacing:2px;cursor:pointer;}
+
+#finalLockScreen{background:rgba(0,0,0,.55);}
+.final-box{background:rgba(0,0,0,.92);border:2px solid var(--red);
+  border-radius:14px;padding:18px 22px;max-width:320px;width:92%;
+  text-align:center;}
+.final-icon{font-size:44px;color:var(--red);margin-bottom:8px;}
+.final-title{font-size:20px;letter-spacing:2px;font-weight:900;
+  color:var(--red);margin-bottom:8px;}
+.final-sub{font-size:11px;color:var(--red);opacity:.85;
+  line-height:1.6;margin-bottom:12px;}
+.btn-small{background:var(--red);color:#fff;padding:10px 18px;border:none;
+  border-radius:8px;font-family:inherit;font-weight:900;font-size:11px;
+  letter-spacing:2px;cursor:pointer;}
+
+body.glitch{animation:glitchShake .1s steps(2) infinite;}
+@keyframes glitchShake{
+  0%,100%{transform:translate(0,0);}
+  25%{transform:translate(-4px,2px);}
+  50%{transform:translate(4px,-2px);}
+  75%{transform:translate(-2px,-4px);}
+}
+</style>
+</head>
+<body>
+
+<div class="desktop-icons" id="desktopIcons"></div>
+
+<div class="screen active" id="lockScreen">
+  <div class="stargate-container">
+    <div class="gate-ring"></div>
+    <div class="event-horizon"></div>
+  </div>
+  <div class="lock-title">GATE LOCKED</div>
+  <div class="lock-sub">ALL FILES ENCRYPTED</div>
+  <div class="lock-timer" id="lockTimer">01:00</div>
+  <div class="lock-timer-label">TIME UNTIL PERMANENT LOCK</div>
+  <div class="lock-panel">
+    <h2>YOUR FILES ARE ENCRYPTED</h2>
+    <p>Оплатите выкуп для восстановления.</p>
+    <div class="price">1.0 BTC</div>
+  </div>
+  <div class="lock-actions">
+    <button class="btn btn-pay" id="btnPay">💰 ЗАПЛАТИТЬ</button>
+    <button class="btn btn-refuse" id="btnRefuse">❌ ОТКАЗАТЬСЯ</button>
+  </div>
+  <div class="lock-footer">⚠ ЭТО СИМУЛЯТОР.</div>
+</div>
+
+<div class="screen" id="payScreen">
+  <div class="pay-title">DIAL THE GATE</div>
+  <div class="pay-sub">
+    <span class="badge" id="attemptLabel">Попытка 1 из 2</span><br>
+    ТРЕБУЕТСЯ: <b>1.0 BTC</b>
+  </div>
+  <div class="amount-input">
+    <span class="cur">₿</span>
+    <input type="number" id="amountInput" placeholder="1.0" step="0.001">
+  </div>
+  <div class="amount-hint" id="amountHint">Правильная сумма: 1.0 BTC</div>
+  <div class="pay-actions">
+    <button class="btn btn-confirm" id="btnConfirmPay">ПЕРЕВЕСТИ</button>
+    <button class="btn btn-cancel" id="btnCancelPay">ОТМЕНА</button>
+  </div>
+</div>
+
+<div class="screen" id="extraScreen">
+  <div class="pay-title">ADDITIONAL CHEVRON</div>
+  <div class="pay-sub">
+    <span class="badge" id="extraAttemptLabel">Попытка 1 из 2</span><br>
+    ДОПЛАТИТЕ: <b>0.5 BTC</b>
+  </div>
+  <div class="amount-input">
+    <span class="cur">₿</span>
+    <input type="number" id="extraInput" placeholder="0.5" step="0.001">
+  </div>
+  <div class="amount-hint" id="extraHint">Доплата: 0.5 BTC</div>
+  <div class="pay-actions">
+    <button class="btn btn-confirm" id="btnConfirmExtra">ДОПЛАТИТЬ</button>
+    <button class="btn btn-cancel" id="btnCancelExtra">ОТМЕНА</button>
+  </div>
+</div>
+
+<div class="screen" id="txScreen">
+  <div class="tx-title">DIALING SEQUENCE</div>
+  <div class="tx-amount" id="txAmount">1.5 BTC</div>
+  <div class="tx-progress-wrap">
+    <div class="tx-label"><span>CHEVRON LOCK</span><span id="txPct">0%</span></div>
+    <div class="tx-progress"><div class="tx-fill" id="txFill"></div></div>
+  </div>
+  <div class="tx-log" id="txLog"></div>
+</div>
+
+<div class="screen" id="successScreen">
+  <div class="success-icon">✓</div>
+  <div class="success-title">WORMHOLE ESTABLISHED</div>
+  <div class="success-sub">ВЫКУП ОПЛАЧЕН. ФАЙЛЫ РАЗБЛОКИРОВАНЫ.</div>
+  <div class="success-paid" id="successPaid">ОПЛАЧЕНО: 1.5 BTC</div>
+  <button class="btn-green" id="btnRestartSuccess">ПЕРЕЗАПУСТИТЬ</button>
+</div>
+
+<div class="screen" id="finalLockScreen">
+  <div class="final-box">
+    <div class="final-icon">🔒</div>
+    <div class="final-title">GATE SEALED</div>
+    <div class="final-sub">Все файлы заблокированы навсегда.</div>
+    <button class="btn-small" id="btnRestartFinal">ПЕРЕЗАПУСТИТЬ</button>
+  </div>
+</div><script>
+var audioCtx=null;
+function beep(f,d,v,t){
+  f=f||440;d=d||.1;v=v||.15;t=t||'square';
+  try{
+    if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    var time=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=t;o.frequency.value=f;
+    g.gain.setValueAtTime(v,time);
+    g.gain.exponentialRampToValueAtTime(.001,time+d);
+    o.connect(g);g.connect(audioCtx.destination);
+    o.start(time);o.stop(time+d+.02);
+  }catch(e){}
+}
+
+var ICONS=[{e:'📁',n:'Documents'},{e:'📁',n:'Photos'},{e:'📁',n:'Videos'},
+{e:'📁',n:'Music'},{e:'📁',n:'Downloads'},{e:'📄',n:'budget.xlsx'},
+{e:'📄',n:'resume.pdf'},{e:'🖼',n:'vacation.jpg'},{e:'🎬',n:'video.mp4'},
+{e:'💾',n:'backup.zip'},{e:'📊',n:'report.docx'},{e:'🔑',n:'passwords.txt'},
+{e:'💼',n:'work'},{e:'📷',n:'photos'},{e:'🎵',n:'playlist'},
+{e:'📱',n:'apps'},{e:'⚙',n:'system'},{e:'🗂',n:'archive'},
+{e:'📝',n:'notes.txt'},{e:'🎮',n:'games'}];
+
+var ic=document.getElementById('desktopIcons');
+function buildIcons(){
+  ic.innerHTML='';
+  for(var i=0;i<ICONS.length;i++){
+    var d=document.createElement('div');
+    d.className='desktop-icon locked';
+    d.innerHTML='<div class="ic">'+ICONS[i].e+'</div><div class="nm">'+ICONS[i].n+'</div>';
+    ic.appendChild(d);
+  }
+}
+
+function unlockAllIcons(cb){
+  var arr=document.querySelectorAll('.desktop-icon'),tot=arr.length;
+  if(!tot){if(cb)cb();return;}
+  for(var i=0;i<tot;i++){
+    (function(el,idx){
+      setTimeout(function(){
+        el.classList.remove('locked');
+        beep(600,.05,.08);
+        if(idx===tot-1&&cb)setTimeout(cb,500);
+      },idx*80);
+    })(arr[i],i);
+  }
+}
+
+function lockAllIcons(cb){
+  var arr=document.querySelectorAll('.desktop-icon'),tot=arr.length;
+  if(!tot){if(cb)cb();return;}
+  for(var i=0;i<tot;i++){
+    (function(el,idx){
+      setTimeout(function(){
+        el.classList.add('locked');
+        beep(300,.05,.08);
+        if(idx===tot-1&&cb)setTimeout(cb,500);
+      },idx*80);
+    })(arr[i],i);
+  }
+}
+
+function playGlitchSounds(){
+  for(var i=0;i<8;i++){
+    (function(n){
+      setTimeout(function(){
+        beep(200+Math.random()*800,.05,.15,'sawtooth');
+      },n*150);
+    })(i);
+  }
+}
+
+function playSiren(){
+  var count=0,max=6;
+  var timer=setInterval(function(){
+    beep(1200,.2,.25,'square');
+    setTimeout(function(){beep(800,.2,.25,'square');},200);
+    count++;
+    if(count>=max)clearInterval(timer);
+  },500);
+}
+
+var screens=['lockScreen','payScreen','extraScreen','txScreen','successScreen','finalLockScreen'];
+function showScreen(id){
+  for(var i=0;i<screens.length;i++)document.getElementById(screens[i]).classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+
+var timerInterval=null;
+var secondsLeft=60;
+
+function updateTimerDisplay(){
+  var m=Math.floor(secondsLeft/60);
+  var s=secondsLeft%60;
+  document.getElementById('lockTimer').textContent=
+    (m<10?'0'+m:m)+':'+(s<10?'0'+s:s);
+}
+
+function startTimer(){
+  if(timerInterval)clearInterval(timerInterval);
+  secondsLeft=60;
+  updateTimerDisplay();
+  timerInterval=setInterval(function(){
+    secondsLeft--;
+    if(secondsLeft<0)secondsLeft=0;
+    updateTimerDisplay();
+    if(secondsLeft<=10&&secondsLeft>0){
+      document.getElementById('lockTimer').classList.add('warning');
+      beep(1400,.08,.15);
+    }
+    if(secondsLeft===0){
+      clearInterval(timerInterval);
+      timerInterval=null;
+      timeOutLock();
+    }
+  },1000);
+}
+
+function stopTimer(){
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+}
+
+function timeOutLock(){
+  stopTimer();
+  for(var i=0;i<screens.length;i++)document.getElementById(screens[i]).classList.remove('active');
+  /* без сирены, без блокировки иконок, без глюков — сразу окно */
+  showScreen('finalLockScreen');
+}
+
+var attempt=1,extraAttempt=1,MAX=2;
+
+document.getElementById('btnPay').addEventListener('click',function(){
+  beep(800,.1,.15);
+  attempt=1;
+  document.getElementById('attemptLabel').textContent='Попытка 1 из 2';
+  document.getElementById('amountInput').value='';
+  document.getElementById('amountHint').textContent='Правильная сумма: 1.0 BTC';
+  document.getElementById('amountHint').style.color='';
+  showScreen('payScreen');
+});
+
+document.getElementById('btnRefuse').addEventListener('click',function(){
+  beep(300,.15,.2,'sawtooth');
+  timeOutLock();
+});
+
+document.getElementById('btnConfirmPay').addEventListener('click',function(){
+  var v=parseFloat(document.getElementById('amountInput').value);
+  if(v===1.0){
+    beep(900,.15,.2);
+    extraAttempt=1;
+    document.getElementById('extraAttemptLabel').textContent='Попытка 1 из 2';
+    document.getElementById('extraInput').value='';
+    document.getElementById('extraHint').textContent='Доплата: 0.5 BTC';
+    document.getElementById('extraHint').style.color='';
+    showScreen('extraScreen');
+    return;
+  }
+  beep(200,.2,.25,'sawtooth');
+  if(attempt<MAX){
+    attempt++;
+    document.getElementById('attemptLabel').textContent='Попытка '+attempt+' из 2';
+    document.getElementById('amountHint').textContent='⚠ Ошибка! Осталась 1 попытка.';
+    document.getElementById('amountHint').style.color='#fff';
+    document.getElementById('amountInput').value='';
+  } else {
+    timeOutLock();
+  }
+});
+
+document.getElementById('btnConfirmExtra').addEventListener('click',function(){
+  var v=parseFloat(document.getElementById('extraInput').value);
+  if(v===0.5){
+    startTx();
+    return;
+  }
+  beep(200,.2,.25,'sawtooth');
+  if(extraAttempt<MAX){
+    extraAttempt++;
+    document.getElementById('extraAttemptLabel').textContent='Попытка '+extraAttempt+' из 2';
+    document.getElementById('extraHint').textContent='⚠ Ошибка! Осталась 1 попытка.';
+    document.getElementById('extraHint').style.color='#fff';
+    document.getElementById('extraInput').value='';
+  } else {
+    timeOutLock();
+  }
+});
+
+document.getElementById('btnCancelPay').addEventListener('click',function(){showScreen('lockScreen');});
+document.getElementById('btnCancelExtra').addEventListener('click',function(){showScreen('lockScreen');});
+
+function startTx(){
+  stopTimer();
+  showScreen('txScreen');
+  document.getElementById('txAmount').textContent='1.5 BTC';
+  document.getElementById('txLog').innerHTML='';
+  document.getElementById('txFill').style.width='0%';
+  document.getElementById('txPct').textContent='0%';
+  var logs=[
+    {at:0,t:'🔗 Connecting to network...'},
+    {at:20,t:'⚡ Chevron 1 locked...'},
+    {at:40,t:'⚡ Chevron 3 locked...'},
+    {at:60,t:'⚡ Chevron 5 locked...'},
+    {at:80,t:'⚡ Chevron 7 locked...'},
+    {at:90,t:'✓ WORMHOLE ESTABLISHED!'},
+    {at:100,t:'✓ FILES UNLOCKED'}
+  ];
+  var p=0,li=0;
+  var t=setInterval(function(){
+    p+=2;
+    if(p>100)p=100;
+    document.getElementById('txFill').style.width=p+'%';
+    document.getElementById('txPct').textContent=p+'%';
+    while(li<logs.length&&p>=logs[li].at){
+      var d=document.createElement('div');
+      d.textContent=logs[li].t;
+      if(logs[li].at>=90)d.className='ok';
+      document.getElementById('txLog').appendChild(d);
+      document.getElementById('txLog').scrollTop=9999;
+      beep(800,.04,.08);
+      li++;
+    }
+    if(p>=100){clearInterval(t);setTimeout(showSuccess,800);}
+  },80);
+}
+
+function showSuccess(){
+  document.body.classList.add('glitch');
+  playGlitchSounds();
+  setTimeout(function(){
+    document.body.classList.remove('glitch');
+    for(var i=0;i<screens.length;i++)document.getElementById(screens[i]).classList.remove('active');
+    unlockAllIcons(function(){
+      beep(800,.15,.2);
+      setTimeout(function(){beep(1000,.15,.2);},150);
+      setTimeout(function(){beep(1200,.15,.2);},300);
+      setTimeout(function(){beep(1500,.4,.25);},450);
+      showScreen('successScreen');
+    });
+  },1500);
+}
+
+document.getElementById('btnRestartSuccess').addEventListener('click',function(){location.reload();});
+document.getElementById('btnRestartFinal').addEventListener('click',function(){location.reload();});
+
+buildIcons();
+startTimer();
+
+document.body.addEventListener('click',function u(){
+  if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+},{once:true});
+</script>
+</body>
+</html>
