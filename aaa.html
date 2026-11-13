@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>WARP CORE · CRITICAL FAILURE</title>
+<style>
+  :root{
+    --orange:#FF9C00;
+    --blue:#99CCFF;
+    --red:#FF3333;
+    --yellow:#FFD700;
+    --bg:#000;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{
+    height:100%;
+    background:var(--bg);
+    color:var(--orange);
+    font-family:"Courier New",monospace;
+    overflow:hidden;
+    user-select:none;
+  }
+
+  .wrap{
+    position:relative;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:16px;
+    gap:12px;
+    z-index:2;
+  }
+
+  /* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--orange);
+    color:#000;
+    padding:10px 16px;
+    border-radius:20px;
+    font-weight:bold;
+    font-size:12px;
+    letter-spacing:2px;
+    transition:all .4s;
+  }
+  .topbar.danger{
+    background:var(--red);
+    color:#fff;
+    animation:barBlink .5s steps(2) infinite;
+  }
+  @keyframes barBlink{
+    0%,100%{opacity:1;}
+    50%{opacity:.6;}
+  }
+
+  /* ===== ОСНОВНАЯ ОБЛАСТЬ ===== */
+  .core-area{
+    flex:1;
+    position:relative;
+    background:radial-gradient(circle at 50% 45%,#0a0a12 0%,#000 75%);
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    border:2px solid #222;
+    transition:border-color .4s, box-shadow .4s;
+  }
+  .core-area.danger{
+    border-color:var(--red);
+    box-shadow:inset 0 0 80px rgba(255,51,51,.35), 0 0 40px rgba(255,51,51,.5);
+    animation:areaShake .15s linear infinite;
+  }
+  @keyframes areaShake{
+    0%{transform:translate(0,0);}
+    25%{transform:translate(-2px,1px);}
+    50%{transform:translate(2px,-1px);}
+    75%{transform:translate(-1px,-2px);}
+    100%{transform:translate(0,0);}
+  }
+
+  /* ===== СТАТУС ===== */
+  .status{
+    position:absolute;
+    top:12px;right:16px;
+    font-size:12px;
+    letter-spacing:1px;
+    text-align:right;
+    line-height:1.5;
+    z-index:5;
+  }
+  .status b{color:#fff;}
+  .status.danger b{color:var(--red);}
+
+  .warning{
+    position:absolute;
+    top:12px;left:16px;
+    font-size:11px;
+    letter-spacing:2px;
+    color:var(--yellow);
+    opacity:.9;
+    z-index:5;
+    animation:warningBlink 1s steps(2) infinite;
+  }
+  @keyframes warningBlink{
+    0%,100%{opacity:.9;}
+    50%{opacity:.3;}
+  }
+
+  /* ===== ТЕМПЕРАТУРА ===== */
+  .temp-panel{
+    position:absolute;
+    bottom:12px;left:16px;right:16px;
+    z-index:5;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .temp-label{
+    font-size:10px;
+    letter-spacing:2px;
+    color:var(--blue);
+    display:flex;
+    justify-content:space-between;
+  }
+  .temp-bar{
+    height:10px;
+    background:#1a1a1a;
+    border-radius:5px;
+    overflow:hidden;
+    border:1px solid #333;
+  }
+  .temp-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#99CCFF,#FFD700,#FF9C00,#FF3333);
+    transition:width .3s ease;
+  }
+
+  /* ===== ЯДРО ===== */
+  .warpcore{
+    position:relative;
+    width:140px;
+    height:55%;
+    min-height:200px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    transition:transform .4s, opacity .4s;
+  }
+  .warpcore.exploding{
+    animation:coreExplode .8s ease-out forwards;
+  }
+  @keyframes coreExplode{
+    0%{transform:scale(1);opacity:1;}
+    50%{transform:scale(1.4);opacity:.8;}
+    100%{transform:scale(2.5);opacity:0;}
+  }
+
+  .tube{
+    position:relative;
+    width:70px;
+    height:100%;
+    border-radius:35px;
+    background:linear-gradient(180deg,#111,#1c1c1c 50%,#111);
+    border:2px solid #333;
+    overflow:hidden;
+    box-shadow:inset 0 0 20px #000,0 0 25px rgba(255,156,0,.15);
+    transition:box-shadow .4s,border-color .4s;
+  }
+  .tube.danger{
+    border-color:var(--red);
+    box-shadow:inset 0 0 30px #000,0 0 40px rgba(255,51,51,.7);
+  }
+
+  .plasma{
+    position:absolute;
+    inset:0;
+    border-radius:33px;
+    background:linear-gradient(180deg,rgba(255,156,0,0),rgba(255,156,0,.85) 25%,
+      rgba(255,230,150,1) 50%,rgba(255,156,0,.85) 75%,rgba(255,156,0,0));
+    background-size:100% 200%;
+    animation:flow 1.6s linear infinite;
+    opacity:.25;
+    transition:opacity .4s, filter .4s;
+  }
+  @keyframes flow{
+    0%{background-position:0 0;}
+    100%{background-position:0 -200%;}
+  }
+
+  .plasma.danger{
+    background:repeating-linear-gradient(180deg,
+      rgba(255,51,51,0) 0px,
+      rgba(255,51,51,.95) 5px,
+      rgba(255,220,220,1) 9px,
+      rgba(255,51,51,.95) 13px,
+      rgba(255,51,51,0) 20px);
+    background-size:100% 200%;
+    animation:flow .3s linear infinite, flick .08s steps(2) infinite;
+    opacity:1;
+    filter:drop-shadow(0 0 25px #FF3333);
+  }
+  @keyframes flick{
+    0%,100%{opacity:1;}
+    50%{opacity:.55;}
+  }
+
+  .glow{
+    position:absolute;
+    top:50%;left:50%;
+    width:200px;height:200px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(255,156,0,.45),transparent 65%);
+    opacity:.15;
+    transition:opacity .5s, background .5s;
+    pointer-events:none;
+    z-index:1;
+  }
+  .glow.danger{
+    background:radial-gradient(circle,rgba(255,51,51,.8),transparent 65%);
+    opacity:1;
+    animation:glowPulse .6s ease-in-out infinite;
+  }
+  @keyframes glowPulse{
+    0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.7;}
+    50%{transform:translate(-50%,-50%) scale(1.25);opacity:1;}
+  }
+
+  .cap{
+    width:90px;height:16px;border-radius:8px;
+    background:linear-gradient(180deg,#444,#222);
+    border:1px solid #555;
+    z-index:2;
+  }
+  .cap.top{margin-bottom:-6px;}
+  .cap.bot{margin-top:-6px;}
+
+  /* ===== КНОПКИ ===== */
+  .controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+    padding:10px 0;
+    z-index:5;
+  }
+  .btn{
+    cursor:pointer;
+    border:none;
+    font-family:inherit;
+    font-weight:bold;
+    letter-spacing:1px;
+    padding:14px 22px;
+    border-radius:22px;
+    font-size:12px;
+    background:#333;
+    color:#000;
+    transition:all .2s;
+    text-transform:uppercase;
+  }
+  .btn.inject{
+    background:#444;
+    color:#666;
+    cursor:not-allowed;
+    position:relative;
+  }
+  .btn.inject::after{
+    content:"🔒";
+    position:absolute;
+    top:-6px;right:-6px;
+    font-size:16px;
+  }
+  .btn.regen{
+    background:var(--blue);
+  }
+  .btn:hover:not(:disabled){filter:brightness(1.15);}
+  .btn:active:not(:disabled){transform:scale(.96);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  /* ===== КАТ-СЦЕНА ===== */
+  .cutscene{
+    position:fixed;
+    inset:0;
+    z-index:500;
+    background:#000;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    text-align:center;
+  }
+  .cutscene.active{display:flex;}
+
+  .cutscene.alarm{
+    background:#2a0000;
+    animation:alarmFlash .4s steps(2) infinite;
+  }
+  @keyframes alarmFlash{
+    0%,100%{background:#2a0000;}
+    50%{background:#5a0000;}
+  }
+
+  .cutscene h1{
+    font-size:clamp(26px,7vw,46px);
+    letter-spacing:6px;
+    color:var(--red);
+    text-shadow:0 0 40px var(--red),0 0 80px var(--red);
+    animation:textFlash .6s steps(2) infinite;
+    margin-bottom:16px;
+  }
+  @keyframes textFlash{
+    0%,100%{opacity:1;}
+    50%{opacity:.4;}
+  }
+
+  .cutscene .big-count{
+    font-size:clamp(80px,25vw,160px);
+    font-weight:900;
+    color:var(--red);
+    text-shadow:0 0 60px var(--red);
+    font-variant-numeric:tabular-nums;
+    animation:bigPulse .5s ease-in-out infinite;
+  }
+  @keyframes bigPulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.1);}
+  }
+
+  .cutscene .sub{
+    font-size:clamp(11px,2.5vw,15px);
+    letter-spacing:4px;
+    color:var(--red);
+    opacity:.8;
+    margin-top:12px;
+  }
+
+  /* ===== CANVAS ВЗРЫВА ===== */
+  #explosionCanvas{
+    position:fixed;
+    inset:0;
+    z-index:600;
+    display:none;
+    pointer-events:none;
+  }
+  #explosionCanvas.active{display:block;}
+
+  /* ===== БЕЛАЯ ВСПЫШКА ===== */
+  .white-flash{
+    position:fixed;
+    inset:0;
+    z-index:650;
+    background:#fff;
+    opacity:0;
+    pointer-events:none;
+  }
+  .white-flash.active{
+    animation:whiteFlash 0.6s ease-out forwards;
+  }
+  @keyframes whiteFlash{
+    0%{opacity:1;}
+    100%{opacity:0;}
+  }
+
+  /* ===== ЭКРАН УНИЧТОЖЕНИЯ ===== */
+  .destroyed{
+    position:fixed;
+    inset:0;
+    z-index:700;
+    background:#000;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+  }
+  .destroyed.active{display:flex;animation:fadeIn 1s ease;}
+
+  .destroyed .skull{
+    font-size:80px;
+    margin-bottom:20px;
+    animation:skullPulse 2s ease-in-out infinite;
+  }
+  @keyframes skullPulse{
+    0%,100%{transform:scale(1);opacity:.8;}
+    50%{transform:scale(1.1);opacity:1;}
+  }
+
+  .destroyed h2{
+    font-size:clamp(24px,6vw,40px);
+    letter-spacing:6px;
+    color:var(--red);
+    text-shadow:0 0 40px var(--red);
+    margin-bottom:16px;
+    animation:destroyedFlicker 3s infinite;
+  }
+  @keyframes destroyedFlicker{
+    0%,100%{opacity:1;}
+    45%{opacity:1;}
+    50%{opacity:.6;}
+    55%{opacity:1;}
+  }
+
+  .destroyed p{
+    font-size:clamp(11px,2.5vw,14px);
+    letter-spacing:3px;
+    color:var(--red);
+    opacity:.7;
+    line-height:1.8;
+    max-width:500px;
+  }
+
+  .destroyed button{
+    margin-top:30px;
+    padding:14px 32px;
+    background:var(--red);
+    color:#fff;
+    border:none;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:bold;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    cursor:pointer;
+    border-radius:8px;
+    transition:all .2s;
+  }
+  .destroyed button:hover{
+    filter:brightness(1.2);
+    box-shadow:0 0 30px var(--red);
+  }
+
+  @keyframes fadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topbar" id="topbar">
+    <span>LCARS 47 · WARP CORE</span>
+    <span id="topStatus">SYSTEM NOMINAL</span>
+  </div>
+
+  <div class="core-area" id="coreArea">
+    <div class="warning" id="warning" style="display:none;">⚠ CORE OVERHEATING</div>
+    <div class="status" id="status">
+      STATUS <b id="stText">STANDBY</b><br>
+      OUTPUT <b id="stPower">0%</b>
+    </div>
+
+    <div class="warpcore" id="warpcore">
+      <div class="glow" id="glow"></div>
+      <div class="cap top"></div>
+      <div class="tube" id="tube">
+        <div class="plasma" id="plasma"></div>
+      </div>
+      <div class="cap bot"></div>
+    </div>
+
+    <div class="temp-panel">
+      <div class="temp-label">
+        <span>CORE TEMPERATURE</span>
+        <span id="tempVal">0%</span>
+      </div>
+      <div class="temp-bar"><div class="temp-fill" id="tempFill"></div></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn inject" id="btnInject" disabled>🔒 Inject</button>
+      <button class="btn regen" id="btnRegen">Regeneration</button>
+    </div>
+  </div>
+</div>
+
+<!-- КАТ-СЦЕНА -->
+<div class="cutscene" id="cutscene">
+  <h1>⚠ WARP CORE BREACH ⚠</h1>
+  <div class="big-count" id="bigCount">5</div>
+  <div class="sub">CONTAINMENT FAILURE · EVACUATE IMMEDIATELY</div>
+</div>
+
+<!-- CANVAS ВЗРЫВА -->
+<canvas id="explosionCanvas"></canvas>
+
+<!-- БЕЛАЯ ВСПЫШКА -->
+<div class="white-flash" id="whiteFlash"></div>
+
+<!-- ЭКРАН УНИЧТОЖЕНИЯ -->
+<div class="destroyed" id="destroyed">
+  <div class="skull">💀</div>
+  <h2>SHIP DESTROYED</h2>
+  <p>
+    ВАРП-ЯДРО ПЕРЕГРЕЛОСЬ И ВЗОРВАЛОСЬ.<br>
+    КОРАБЛЬ УНИЧТОЖЕН. ВСЕ СИСТЕМЫ ОФЛАЙН.<br><br>
+    (Это симулятор — на самом деле ничего не взорвалось.)
+  </p>
+  <button id="restartBtn">ПЕРЕЗАПУСТИТЬ</button>
+</div>
+
+<script>
+/* =====================================================
+   🔊 ЗВУК
+   ===================================================== */
+var audioCtx = null;
+function initAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  }
+}
+function beep(freq,dur,vol,type){
+  freq = freq||440; dur = dur||0.1; vol = vol||0.15; type = type||'square';
+  try{
+    initAudio();
+    if(!audioCtx) return;
+    var t = audioCtx.currentTime;
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(vol,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t); o.stop(t+dur+0.02);
+  }catch(e){}
+}
+
+function explosionSound(){
+  try{
+    initAudio();
+    if(!audioCtx) return;
+    var t = audioCtx.currentTime;
+    var bufSize = audioCtx.sampleRate * 2.5;
+    var buf = audioCtx.createBuffer(1,bufSize,audioCtx.sampleRate);
+    var d = buf.getChannelData(0);
+    for(var i=0;i<bufSize;i++) d[i] = (Math.random()*2-1) * (1 - i/bufSize);
+    var noise = audioCtx.createBufferSource();
+    noise.buffer = buf;
+    var lpf = audioCtx.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.setValueAtTime(3000,t);
+    lpf.frequency.exponentialRampToValueAtTime(40,t+2);
+    var g = audioCtx.createGain();
+    g.gain.setValueAtTime(1,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+2.2);
+    noise.connect(lpf); lpf.connect(g); g.connect(audioCtx.destination);
+    noise.start(t); noise.stop(t+2.5);
+    // низкий гул
+    var o = audioCtx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(80,t);
+    o.frequency.exponentialRampToValueAtTime(20,t+2);
+    var og = audioCtx.createGain();
+    og.gain.setValueAtTime(0.8,t);
+    og.gain.exponentialRampToValueAtTime(0.001,t+2.2);
+    o.connect(og); og.connect(audioCtx.destination);
+    o.start(t); o.stop(t+2.5);
+  }catch(e){}
+}
+
+/* =====================================================
+   ЭЛЕМЕНТЫ
+   ===================================================== */
+var topbar = document.getElementById('topbar');
+var topStatus = document.getElementById('topStatus');
+var coreArea = document.getElementById('coreArea');
+var warning = document.getElementById('warning');
+var status = document.getElementById('status');
+var stText = document.getElementById('stText');
+var stPower = document.getElementById('stPower');
+var glow = document.getElementById('glow');
+var tube = document.getElementById('tube');
+var plasma = document.getElementById('plasma');
+var warpcore = document.getElementById('warpcore');
+var btnInject = document.getElementById('btnInject');
+var btnRegen = document.getElementById('btnRegen');
+var tempFill = document.getElementById('tempFill');
+var tempVal = document.getElementById('tempVal');
+var cutscene = document.getElementById('cutscene');
+var bigCount = document.getElementById('bigCount');
+var canvas = document.getElementById('explosionCanvas');
+var ctx = canvas.getContext('2d');
+var whiteFlash = document.getElementById('whiteFlash');
+var destroyed = document.getElementById('destroyed');
+
+var breachStarted = false;
+var regenOn = false;
+var temperature = 0;
+var overheatInterval = null;
+
+/* =====================================================
+   INJECT — заблокирован (просто заглушка)
+   ===================================================== */
+btnInject.addEventListener('click', function(e){
+  e.preventDefault();
+  beep(200,0.1,0.15,'sawtooth');
+  return false;
+});
+
+/* =====================================================
+   REGENERATION
+   ===================================================== */
+btnRegen.addEventListener('click', function(){
+  if(breachStarted) return;
+  regenOn = !regenOn;
+  if(regenOn){
+    plasma.style.background = 'repeating-linear-gradient(180deg,' +
+      'rgba(153,204,255,0) 0px,rgba(153,204,255,.9) 6px,' +
+      'rgba(255,255,255,1) 10px,rgba(153,204,255,.9) 14px,' +
+      'rgba(153,204,255,0) 22px)';
+    plasma.style.backgroundSize = '100% 220%';
+    plasma.style.animation = 'flow .8s linear infinite';
+    plasma.style.opacity = '1';
+    plasma.style.filter = 'drop-shadow(0 0 16px #99CCFF)';
+    glow.style.background = 'radial-gradient(circle,rgba(153,204,255,.55),transparent 65%)';
+    glow.style.opacity = '1';
+    stText.textContent = 'REGENERATION';
+    stPower.textContent = '87%';
+    beep(660,0.15,0.15);
+    setTimeout(function(){ beep(880,0.15,0.15); }, 150);
+  } else {
+    resetCore();
+  }
+});
+
+function resetCore(){
+  plasma.style.background = 'linear-gradient(180deg,' +
+    'rgba(255,156,0,0),rgba(255,156,0,.85) 25%,' +
+    'rgba(255,230,150,1) 50%,rgba(255,156,0,.85) 75%,' +
+    'rgba(255,156,0,0))';
+  plasma.style.backgroundSize = '100% 200%';
+  plasma.style.animation = 'flow 1.6s linear infinite';
+  plasma.style.opacity = '.25';
+  plasma.style.filter = 'none';
+  glow.style.background = 'radial-gradient(circle,rgba(255,156,0,.45),transparent 65%)';
+  glow.style.opacity = '.15';
+  stText.textContent = 'STANDBY';
+  stPower.textContent = '0%';
+}
+
+/* =====================================================
+   АВТОМАТИЧЕСКИЙ ПЕРЕГРЕВ (начинается через 2 сек)
+   ===================================================== */
+setTimeout(startOverheat, 2000);
+
+function startOverheat(){
+  if(breachStarted) return;
+  stText.textContent = 'NOMINAL';
+  stPower.textContent = '100%';
+
+  overheatInterval = setInterval(function(){
+    temperature += 4;
+    if(temperature > 100) temperature = 100;
+    tempFill.style.width = temperature + '%';
+    tempVal.textContent = temperature + '%';
+
+    if(temperature % 20 === 0 && temperature < 100){
+      beep(600,0.08,0.1);
+    }
+    if(temperature >= 60 && !breachStarted){
+      activateDanger();
+    }
+    if(temperature >= 100){
+      clearInterval(overheatInterval);
+      triggerBreach();
+    }
+  }, 200);
+}
+
+function activateDanger(){
+  if(breachStarted) return;
+  breachStarted = true;
+
+  beep(800,0.15,0.2,'sawtooth');
+  setTimeout(function(){ beep(600,0.15,0.2,'sawtooth'); }, 200);
+
+  topbar.classList.add('danger');
+  topStatus.textContent = '⚠ CORE OVERHEAT';
+  coreArea.classList.add('danger');
+  warning.style.display = 'block';
+  status.classList.add('danger');
+  tube.classList.add('danger');
+  glow.classList.add('danger');
+  plasma.classList.add('danger');
+  stText.textContent = '⚠ CRITICAL';
+  stPower.textContent = 'ERR';
+  btnRegen.disabled = true;
+}
+
+/* =====================================================
+   КАТ-СЦЕНА С ОТСЧЁТОМ
+   ===================================================== */
+function triggerBreach(){
+  cutscene.classList.add('active');
+  cutscene.classList.add('alarm');
+
+  var count = 5;
+  bigCount.textContent = count;
+  beep(1200,0.2,0.25,'square');
+
+  var timer = setInterval(function(){
+    count--;
+    if(count <= 0){
+      clearInterval(timer);
+      bigCount.textContent = '0';
+      beep(1500,0.5,0.3,'sawtooth');
+      setTimeout(startExplosionAnimation, 500);
+    } else {
+      bigCount.textContent = count;
+      beep(1000,0.2,0.25,'square');
+    }
+  }, 1000);
+}
+
+/* =====================================================
+   💥 АНИМАЦИЯ ВЗРЫВА НА CANVAS
+   ===================================================== */
+var particles = [];
+var shockwaves = [];
+var debris = [];
+var explosionFrame = 0;
+var explosionActive = false;
+var canvasW = 0, canvasH = 0;
+
+function resizeCanvas(){
+  canvasW = window.innerWidth;
+  canvasH = window.innerHeight;
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+}
+window.addEventListener('resize', resizeCanvas);
+
+function startExplosionAnimation(){
+  // скрываем кат-сцену
+  cutscene.classList.remove('active');
+  cutscene.classList.remove('alarm');
+
+  // белая вспышка
+  whiteFlash.classList.add('active');
+
+  // звук взрыва
+  explosionSound();
+
+  // прячем ядро
+  warpcore.classList.add('exploding');
+
+  // запускаем canvas
+  resizeCanvas();
+  canvas.classList.add('active');
+
+  var cx = canvasW / 2;
+  var cy = canvasH / 2;
+
+  // 1. Ударные волны (кольца)
+  shockwaves = [
+    { x: cx, y: cy, r: 0, maxR: Math.max(canvasW, canvasH) * 0.8, speed: 18, opacity: 1, color: '#FFD700', width: 8 },
+    { x: cx, y: cy, r: 0, maxR: Math.max(canvasW, canvasH) * 0.6, speed: 12, opacity: 1, color: '#FF9C00', width: 6 },
+    { x: cx, y: cy, r: 0, maxR: Math.max(canvasW, canvasH) * 0.4, speed: 8,  opacity: 1, color: '#FF3333', width: 4 }
+  ];
+
+  // 2. Частицы (искры/огонь)
+  particles = [];
+  for(var i = 0; i < 200; i++){
+    var angle = Math.random() * Math.PI * 2;
+    var speed = 3 + Math.random() * 15;
+    var colors = ['#FFFFFF', '#FFD700', '#FF9C00', '#FF6600', '#FF3333'];
+    particles.push({
+      x: cx,
+      y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      r: 2 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 1,
+      decay: 0.008 + Math.random() * 0.015,
+      gravity: 0.15
+    });
+  }
+
+  // 3. Обломки
+  debris = [];
+  for(var j = 0; j < 40; j++){
+    var ang = Math.random() * Math.PI * 2;
+    var spd = 5 + Math.random() * 12;
+    debris.push({
+      x: cx,
+      y: cy,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      size: 3 + Math.random() * 8,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.3,
+      color: Math.random() > 0.5 ? '#444' : '#666',
+      life: 1,
+      decay: 0.005 + Math.random() * 0.008
+    });
+  }
+
+  explosionFrame = 0;
+  explosionActive = true;
+  requestAnimationFrame(animateExplosion);
+}
+
+function animateExplosion(){
+  if(!explosionActive) return;
+
+  explosionFrame++;
+
+  // затемнение с затуханием
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  // ----- ударные волны -----
+  for(var i = shockwaves.length - 1; i >= 0; i--){
+    var sw = shockwaves[i];
+    sw.r += sw.speed;
+    sw.opacity *= 0.97;
+    if(sw.r > sw.maxR || sw.opacity < 0.01){
+      shockwaves.splice(i, 1);
+      continue;
+    }
+    ctx.beginPath();
+    ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+    ctx.strokeStyle = sw.color;
+    ctx.globalAlpha = sw.opacity;
+    ctx.lineWidth = sw.width;
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = sw.color;
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+
+  // ----- частицы -----
+  for(var p = particles.length - 1; p >= 0; p--){
+    var pt = particles[p];
+    pt.x += pt.vx;
+    pt.y += pt.vy;
+    pt.vy += pt.gravity;
+    pt.vx *= 0.98;
+    pt.vy *= 0.98;
+    pt.life -= pt.decay;
+    pt.r *= 0.995;
+
+    if(pt.life <= 0){
+      particles.splice(p, 1);
+      continue;
+    }
+
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+    ctx.fillStyle = pt.color;
+    ctx.globalAlpha = pt.life;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = pt.color;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+
+  // ----- обломки -----
+  for(var d = debris.length - 1; d >= 0; d--){
+    var db = debris[d];
+    db.x += db.vx;
+    db.y += db.vy;
+    db.vy += 0.2;      // гравитация
+    db.vx *= 0.99;
+    db.vy *= 0.99;
+    db.rot += db.rotSpeed;
+    db.life -= db.decay;
+
+    if(db.life <= 0){
+      debris.splice(d, 1);
+      continue;
+    }
+
+    ctx.save();
+    ctx.translate(db.x, db.y);
+    ctx.rotate(db.rot);
+    ctx.fillStyle = db.color;
+    ctx.globalAlpha = db.life;
+    ctx.fillRect(-db.size/2, -db.size/2, db.size, db.size);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+
+  // ----- центральная вспышка первые кадры -----
+  if(explosionFrame < 15){
+    var flashR = 50 + explosionFrame * 30;
+    var grad = ctx.createRadialGradient(canvasW/2, canvasH/2, 0, canvasW/2, canvasH/2, flashR);
+    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.4, 'rgba(255,215,0,0.7)');
+    grad.addColorStop(1, 'rgba(255,51,51,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+  }
+
+  // остановка через 6 секунд или когда всё утихло
+  if(explosionFrame > 360 || (particles.length === 0 && debris.length === 0 && shockwaves.length === 0)){
+    explosionActive = false;
+    showDestroyedScreen();
+    return;
+  }
+
+  requestAnimationFrame(animateExplosion);
+}
+
+function showDestroyedScreen(){
+  // постепенно скрываем canvas
+  canvas.classList.remove('active');
+  // показываем экран уничтожения
+  setTimeout(function(){
+    destroyed.classList.add('active');
+  }, 300);
+}
+
+/* =====================================================
+   ПЕРЕЗАПУСК
+   ===================================================== */
+document.getElementById('restartBtn').addEventListener('click', function(){
+  location.reload();
+});
+
+/* первый клик разблокирует аудио */
+document.body.addEventListener('click', function unlock(){
+  initAudio();
+  document.body.removeEventListener('click', unlock);
+}, {once:true});
+</script>
+</body>
+</html>
