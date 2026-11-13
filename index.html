@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LCARS 47 · MAIN MENU</title>
+<style>
+:root{--orange:#FF9C00;--purple:#CC99CC;--blue:#99CCFF;
+--tan:#FFCC99;--gold:#FFD700;--green:#33FF66;--red:#FF3333;--bg:#000;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--orange);
+font-family:"Arial Narrow",Arial,sans-serif;overflow:hidden;user-select:none;}
+
+.lcars{display:grid;height:100vh;
+grid-template-columns:120px 1fr 120px;
+grid-template-rows:50px 1fr 50px;
+gap:6px;padding:8px;}
+@media(max-width:700px){
+.lcars{grid-template-columns:60px 1fr 60px;grid-template-rows:40px 1fr 40px;}}
+
+.elbow{border-radius:30px 0 0 30px;background:var(--orange);}
+.elbow.r{border-radius:0 30px 30px 0;background:var(--purple);}
+.bar{background:var(--orange);border-radius:16px;display:flex;
+align-items:center;padding:0 14px;font-weight:bold;
+letter-spacing:1px;color:#000;font-size:12px;}
+.bar.p{background:var(--purple);}
+.bar.b{background:var(--blue);}
+
+.side{display:flex;flex-direction:column;gap:6px;}
+.side .block{flex:1;border-radius:24px;background:var(--tan);}
+.side .block:first-child{flex:0.5;background:var(--orange);}
+.side .block:nth-child(2){background:var(--purple);}
+.side .block:nth-child(3){background:var(--blue);}
+
+.main{grid-column:2;grid-row:2;position:relative;
+background:radial-gradient(circle at 50% 40%,#0a0a12 0%,#000 75%);
+border-radius:8px;overflow:hidden;border:2px solid #222;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+padding:20px;}
+
+.title{font-size:clamp(24px,6vw,42px);letter-spacing:clamp(4px,2vw,10px);
+color:var(--orange);font-weight:bold;text-shadow:0 0 25px rgba(255,156,0,.6);
+margin-bottom:6px;text-align:center;}
+.subtitle{font-size:clamp(9px,2vw,12px);letter-spacing:4px;color:var(--purple);
+opacity:.7;margin-bottom:20px;text-align:center;}
+
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:12px;
+width:min(560px,95%);}
+@media(max-width:520px){.menu{grid-template-columns:1fr;gap:9px;}}
+
+.menu-item{display:flex;flex-direction:column;align-items:center;
+justify-content:center;padding:18px 12px;border-radius:22px;
+font-weight:bold;letter-spacing:2px;text-transform:uppercase;
+text-align:center;font-size:clamp(10px,2.2vw,13px);line-height:1.3;
+transition:all .2s;cursor:pointer;border:2px solid;
+background:#111;text-decoration:none;color:inherit;}
+.menu-item .icon{font-size:24px;display:block;margin-bottom:6px;}
+.menu-item small{display:block;font-size:8px;letter-spacing:1px;
+opacity:.7;margin-top:5px;font-weight:normal;}
+.menu-item:active{transform:scale(.96);}
+
+.m-warp{color:var(--orange);border-color:var(--orange);}
+.m-warp:hover{background:rgba(255,156,0,.15);box-shadow:0 0 20px var(--orange);}
+.m-borg{color:var(--green);border-color:var(--green);}
+.m-borg:hover{background:rgba(51,255,102,.15);box-shadow:0 0 20px var(--green);}
+.m-destruct{color:var(--red);border-color:var(--red);}
+.m-destruct:hover{background:rgba(255,51,51,.15);box-shadow:0 0 20px var(--red);}
+.m-ransom{color:#ff66ff;border-color:#ff66ff;}
+.m-ransom:hover{background:rgba(255,102,255,.15);box-shadow:0 0 20px #ff66ff;}
+.m-pole{color:var(--gold);border-color:var(--gold);}
+.m-pole:hover{background:rgba(255,215,0,.15);box-shadow:0 0 20px var(--gold);}
+
+.footer{position:absolute;bottom:8px;left:0;right:0;
+text-align:center;font-size:8px;letter-spacing:2px;
+color:var(--purple);opacity:.5;}
+</style>
+</head>
+<body>
+<div class="lcars">
+  <div class="elbow"></div>
+  <div class="bar">LCARS 47 · MAIN SYSTEM</div>
+  <div class="elbow r"></div>
+
+  <div class="side"><div class="block"></div><div class="block"></div><div class="block"></div></div>
+
+  <div class="main">
+    <div class="title">LCARS 47</div>
+    <div class="subtitle">LIBRARY COMPUTER ACCESS AND RETRIEVAL SYSTEM</div>
+
+    <div class="menu">
+      <a class="menu-item m-warp" href="warpcore.html">
+        <span class="icon">⚛</span>WARP CORE<small>START · INJECT · BREACH · BORG</small></a>
+      <a class="menu-item m-borg" href="borg.html">
+        <span class="icon">⬢</span>BORG<small>RESISTANCE IS FUTILE</small></a>
+      <a class="menu-item m-destruct" href="destruct.html">
+        <span class="icon">⚠</span>AUTO-DESTRUCT<small>SELF-DESTRUCT SEQUENCE</small></a>
+      <a class="menu-item m-ransom" href="ransom.html">
+        <span class="icon">🔒</span>RANSOM<small>СИМУЛЯТОР ВЫКУПА</small></a>
+      <a class="menu-item m-pole" href="pole.html">
+        <span class="icon">🎡</span>ПОЛЕ ЧУДЕС<small>ИГРА</small></a>
+    </div>
+
+    <div class="footer">LCARS 47 · STARFLEET PERSONAL EDITION</div>
+  </div>
+
+  <div class="side"><div class="block"></div><div class="block"></div><div class="block"></div></div>
+
+  <div class="elbow"></div>
+  <div class="bar p">SYSTEM · ONLINE</div>
+  <div class="elbow r"></div>
+</div>
+</body>
+</html>
